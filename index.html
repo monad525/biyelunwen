@@ -308,46 +308,60 @@
 
 // 开始休息
 function startBreak(nextPhase) {
-    let breakTime = 15; // 15秒
-    let progressBarFill = document.getElementById('progressBarFill');
-    let progressBarText = document.getElementById('progressBarText');
-    let breakContinueButton = document.getElementById('breakContinueButton');
+    let breakInterval; // 定义全局变量来保存休息倒计时的 interval
+    let breakTime = 15; // 休息时间
 
-    progressBarFill.style.width = '0%';
-    progressBarText.textContent = breakTime + '秒';
-    breakContinueButton.classList.add('hidden');
+    function startBreak(nextPhase) {
+        let progressBarFill = document.getElementById('progressBarFill');
+        let progressBarText = document.getElementById('progressBarText');
+        let breakContinueButton = document.getElementById('breakContinueButton');
 
-    let interval = setInterval(() => {
-        breakTime--;
-        let percent = ((15 - breakTime) / 15) * 100;
-        progressBarFill.style.width = percent + '%';
+        breakTime = 15; // 每次重置休息时间
+        progressBarFill.style.width = '0%';
         progressBarText.textContent = breakTime + '秒';
+        breakContinueButton.classList.add('hidden'); // 隐藏“继续实验”按钮
 
-        if (breakTime <= 0) {
-            clearInterval(interval);
-            // 显示“继续实验”按钮
-            breakContinueButton.classList.remove('hidden');
-            // 设置下一阶段
-            breakContinueButton.dataset.nextPhase = nextPhase;
+        // 清除可能已经存在的计时器
+        if (breakInterval) {
+            clearInterval(breakInterval);
         }
-    }, 1000);
-}
 
+        // 启动新的计时器
+        breakInterval = setInterval(() => {
+            breakTime--;
+            let percent = ((15 - breakTime) / 15) * 100;
+            progressBarFill.style.width = percent + '%';
+            progressBarText.textContent = breakTime + '秒';
 
-function continueExperiment() {
-    let nextPhase = document.getElementById('breakContinueButton').dataset.nextPhase;
-    document.getElementById('break').classList.add('hidden');
-    document.getElementById('breakContinueButton').classList.add('hidden');
-
-    if (nextPhase === 'stroop') {
-        document.getElementById('experiment').classList.remove('hidden');
-        document.getElementById('experimentTitle').innerText = '正式实验阶段（第二部分）';
-        showNextWord(); // 继续正式实验的下一个词汇
-    } else if (nextPhase === 'amp') {
-        document.getElementById('ampExperiment').classList.remove('hidden');
-        showNextAMPStimulus(); // 继续AMP的下一个刺激
+            if (breakTime <= 0) {
+                clearInterval(breakInterval); // 停止计时器
+                breakContinueButton.classList.remove('hidden'); // 显示“继续实验”按钮
+                // 保存下一阶段以便在“继续实验”时正确使用
+                breakContinueButton.dataset.nextPhase = nextPhase;
+            }
+        }, 1000);
     }
-}
+
+    function continueExperiment() {
+        let nextPhase = document.getElementById('breakContinueButton').dataset.nextPhase;
+        document.getElementById('break').classList.add('hidden');
+        document.getElementById('breakContinueButton').classList.add('hidden');
+
+        // 清除任何可能遗留的计时器
+        if (breakInterval) {
+            clearInterval(breakInterval);
+        }
+
+        if (nextPhase === 'stroop') {
+            document.getElementById('experiment').classList.remove('hidden');
+            document.getElementById('experimentTitle').innerText = '正式实验阶段（第二部分）';
+            showNextWord();
+        } else if (nextPhase === 'amp') {
+            document.getElementById('ampExperiment').classList.remove('hidden');
+            showNextAMPStimulus();
+        }
+    }
+
 
 
         function finishStroopExperiment() {
