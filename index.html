@@ -6,13 +6,46 @@
     <!-- 添加视口元标签 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .hidden { display: none; }
-        .word { font-size: 50px; margin: 20px; }
-        .image { max-width: 80%; height: auto; margin: 20px auto; }
-        .feedback { font-size: 30px; margin: 10px; color: #555; }
-        .button { padding: 10px 20px; margin: 10px; font-size: 20px; }
-        .options { margin-bottom: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .word {
+            font-size: 5vw; /* 默认使用弹性单位 */
+            margin: 20px;
+        }
+
+        .image {
+            max-width: 80%;
+            height: auto;
+            margin: 20px auto;
+        }
+
+        .feedback {
+            font-size: 30px;
+            margin: 10px;
+            color: #555;
+        }
+
+        .button {
+            font-size: 2.5vw; /* 默认使用弹性单位 */
+            padding: 1vw 2vw;
+            margin: 10px;
+        }
+
+        .options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
         /* 进度条样式 */
         .progress-bar {
             width: 80%;
@@ -23,12 +56,14 @@
             height: 30px;
             position: relative;
         }
+
         .progress-bar-fill {
             background-color: #4caf50;
             height: 100%;
             width: 0%;
             transition: width 1s linear;
         }
+
         .progress-bar-text {
             position: absolute;
             width: 100%;
@@ -38,15 +73,27 @@
             left: 0;
             font-weight: bold;
         }
+
         /* 针对小屏幕设备的样式调整 */
         @media screen and (max-width: 600px) {
-            .word { font-size: 30px; }
-            .button { font-size: 16px; padding: 8px 16px; }
-            .feedback { font-size: 24px; }
+            .word {
+                font-size: 30px;
+            }
+            .button {
+                font-size: 16px;
+                padding: 8px 16px;
+            }
+            .feedback {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 这里可以继续添加你的页面内容 -->
+</body>
+</html>
+
 
     <!-- 开始页面 -->
     <div id="start">
