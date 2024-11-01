@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>实验程序</title>
+    <!-- 添加视口元标签 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .hidden { display: none; }
+        .word { font-size: 50px; margin: 20px; }
+        .image { max-width: 80%; height: auto; margin: 20px auto; }
+        .feedback { font-size: 30px; margin: 10px; color: #555; }
+        .button { padding: 10px 20px; margin: 10px; font-size: 20px; }
+        .options { margin-bottom: 20px; }
+        /* 进度条样式 */
+        .progress-bar {
+            width: 80%;
+            max-width: 400px;
+            background-color: #f3f3f3;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            height: 30px;
+            position: relative;
+        }
+        .progress-bar-fill {
+            background-color: #4caf50;
+            height: 100%;
+            width: 0%;
+            transition: width 1s linear;
+        }
+        .progress-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            top: 0;
+            left: 0;
+            font-weight: bold;
+        }
+        /* 针对小屏幕设备的样式调整 */
+        @media screen and (max-width: 600px) {
+            .word { font-size: 30px; }
+            .button { font-size: 16px; padding: 8px 16px; }
+            .feedback { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 开始页面 -->
+    <div id="start">
+        <h1>欢迎参加实验！</h1>
+        <p>请输入您父亲/母亲的后四位手机号码：</p>
+        <input type="text" id="phone" maxlength="4">
+        <br><br>
+        <button class="button" onclick="showInstructions()">开始实验</button>
+    </div>
+
+    <!-- Stroop实验指导语 -->
+    <div id="instructions" class="hidden">
+        <h2>颜色命名任务指导语</h2>
+        <p>在接下来的实验中，您会看到一些词语，它们会以不同的颜色显示。</p>
+        <p><span style="color:red; font-weight:bold;">请忽略词语的内容，快速选择显示的颜色。</span></p>
+        <p>当词语消失后，会出现三个颜色选项，请根据您看到的颜色进行选择。</p>
+        <button class="button" onclick="startPractice()">继续</button>
+    </div>
+
+    <!-- 练习阶段 -->
+    <div id="practice" class="hidden">
+        <h2>练习阶段</h2>
+        <div id="practiceTrial">
+            <div id="practiceWord" class="word"></div>
+            <div id="practiceOptions" class="options hidden">
+                <button class="button" onclick="selectColor('红色')">红色</button>
+                <button class="button" onclick="selectColor('绿色')">绿色</button>
+                <button class="button" onclick="selectColor('蓝色')">蓝色</button>
+            </div>
+            <div id="practiceFeedback" class="feedback hidden"></div>
+        </div>
+    </div>
+
+    <!-- 练习结束选择 -->
+    <div id="practiceEnd" class="hidden">
+        <h2>练习结束</h2>
+        <p>您觉得已经适应了规则吗？</p>
+        <button class="button" onclick="restartPractice()">重新练习</button>
+        <button class="button" onclick="startExperiment()">进入正式实验</button>
+    </div>
+
+    <!-- 正式实验阶段 -->
+    <div id="experiment" class="hidden">
+        <h2 id="experimentTitle">正式实验阶段</h2>
+        <div id="experimentTrial">
+            <div id="experimentWord" class="word"></div>
+            <div id="experimentOptions" class="options hidden">
+                <button class="button" onclick="selectColor('红色')">红色</button>
+                <button class="button" onclick="selectColor('绿色')">绿色</button>
+                <button class="button" onclick="selectColor('蓝色')">蓝色</button>
+            </div>
+            <div id="experimentFeedback" class="feedback hidden"></div>
+        </div>
+    </div>
+
+    <!-- 休息提示 -->
+    <div id="break" class="hidden">
+        <h2>休息一下</h2>
+        <p>您可以休息15秒，放松一下眼睛。</p>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+            <div class="progress-bar-text" id="progressBarText">15秒</div>
+        </div>
+        <p>请准备好，休息结束后将继续实验。</p>
+        <button id="breakContinueButton" class="button hidden" onclick="continueExperiment()">继续实验</button>
+    </div>
+
+    <!-- Stroop实验完成后的过渡 -->
+    <div id="stroopEnd" class="hidden">
+        <h2>颜色命名任务结束</h2>
+        <p>您已完成颜色命名任务，接下来将进行另一个任务。</p>
+        <button class="button" onclick="showAMPInstructions()">继续</button>
+    </div>
+
+    <!-- AMP实验指导语 -->
+    <div id="ampInstructions" class="hidden">
+        <h2>图片判断任务指导语</h2>
+        <p>在接下来的任务中，您会看到一些快速闪现的图片。</p>
+        <p><span style="color:red; font-weight:bold;">请根据您的第一印象，快速判断您对每张图片的喜好。</span></p>
+        <p>当图片消失后，会出现“喜欢”和“不喜欢”两个选项，请根据您的直觉进行选择。</p>
+        <button class="button" onclick="startAMPPractice()">继续</button>
+    </div>
+
+    <!-- AMP练习阶段 -->
+    <div id="ampPractice" class="hidden">
+        <h2>练习阶段</h2>
+        <div id="ampPracticeTrial">
+            <div id="ampPrimeStimulus" class="word hidden"></div>
+            <img id="ampTargetStimulus" class="image hidden" src="" alt="目标刺激">
+            <div id="ampPracticeOptions" class="options hidden">
+                <button class="button" onclick="selectAMPOption('喜欢')">喜欢</button>
+                <button class="button" onclick="selectAMPOption('不喜欢')">不喜欢</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AMP练习结束选择 -->
+    <div id="ampPracticeEnd" class="hidden">
+        <h2>练习结束</h2>
+        <p>您觉得已经理解任务要求了吗？</p>
+        <button class="button" onclick="restartAMPPractice()">重新练习</button>
+        <button class="button" onclick="startAMPExperiment()">进入正式实验</button>
+    </div>
+
+    <!-- AMP正式实验阶段 -->
+    <div id="ampExperiment" class="hidden">
+        <h2>正式实验阶段</h2>
+        <div id="ampExperimentTrial">
+            <div id="ampPrimeStimulusExp" class="word hidden"></div>
+            <img id="ampTargetStimulusExp" class="image hidden" src="" alt="目标刺激">
+            <div id="ampExperimentOptions" class="options hidden">
+                <button class="button" onclick="selectAMPOption('喜欢')">喜欢</button>
+                <button class="button" onclick="selectAMPOption('不喜欢')">不喜欢</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实验结束 -->
+    <div id="finish" class="hidden">
+        <h2>实验结束</h2>
+        <p>感谢您的参与！</p>
+    </div>
+
+    <!-- 将脚本放在这里，确保在HTML元素之后 -->
+    <script>
+        // ========== Stroop实验相关变量和函数 ==========
+        // 词汇列表
+        const neutralWords = ["树", "水", "书", "桌子", "椅子", "笔", "天空", "电脑", "手机", "杯子", "门", "窗户", "石头", "路", "桥", "车", "灯", "云", "花", "草"];
+        const anxietyWords = ["考试", "作业", "成绩", "排名", "失败",
+                              "孤独", "被排斥", "比较", "羞辱", "争吵",
+                              "期望", "责备", "家庭矛盾", "失望", "要求",
+                              "自卑", "无助", "紧张", "担心", "害怕"];
+        const colors = ["红色", "绿色", "蓝色"];
+        const colorValues = {"红色": "red", "绿色": "green", "蓝色": "blue"};
+
+        // 记录当前阶段和试次
+        let practiceTrials = [];
+        let experimentTrials = [];
+        let currentTrial = 0;
+        let currentPhase = 'practice'; // 或 'experiment'
+        let correctColor = '';
+
+        // 分段控制
+        let segment = 1; // 当前是第几段，总共2段
+
+        function showInstructions() {
+            document.getElementById('start').classList.add('hidden');
+            document.getElementById('instructions').classList.remove('hidden');
+        }
+
+        function startPractice() {
+            document.getElementById('instructions').classList.add('hidden');
+            document.getElementById('practice').classList.remove('hidden');
+            // 初始化练习试次
+            practiceTrials = neutralWords.slice(0, 7);
+            shuffleArray(practiceTrials);
+            currentTrial = 0;
+            currentPhase = 'practice';
+            showNextWord();
+        }
+
+        function restartPractice() {
+            document.getElementById('practiceEnd').classList.add('hidden');
+            document.getElementById('practice').classList.remove('hidden');
+            shuffleArray(practiceTrials);
+            currentTrial = 0;
+            showNextWord();
+        }
+
+        function startExperiment() {
+            document.getElementById('practiceEnd').classList.add('hidden');
+            document.getElementById('experiment').classList.remove('hidden');
+            // 初始化正式实验试次
+            let neutralSample = neutralWords.slice(0);
+            let anxietySample = anxietyWords.slice(0);
+            shuffleArray(neutralSample);
+            shuffleArray(anxietySample);
+            experimentTrials = neutralSample.slice(0, 20).concat(anxietySample.slice(0, 20));
+            shuffleArray(experimentTrials);
+            currentTrial = 0;
+            currentPhase = 'experiment';
+            segment = 1;
+            showNextWord();
+        }
+
+        function showNextWord() {
+            let wordDiv, optionsDiv, feedbackDiv, wordList;
+            if (currentPhase === 'practice') {
+                wordDiv = document.getElementById('practiceWord');
+                optionsDiv = document.getElementById('practiceOptions');
+                feedbackDiv = document.getElementById('practiceFeedback');
+                wordList = practiceTrials;
+            } else {
+                wordDiv = document.getElementById('experimentWord');
+                optionsDiv = document.getElementById('experimentOptions');
+                feedbackDiv = document.getElementById('experimentFeedback');
+                wordList = experimentTrials;
+            }
+
+            if (currentTrial >= wordList.length) {
+                if (currentPhase === 'practice') {
+                    document.getElementById('practice').classList.add('hidden');
+                    document.getElementById('practiceEnd').classList.remove('hidden');
+                } else {
+                    finishStroopExperiment();
+                }
+                return;
+            }
+
+            // 检查是否需要休息
+            if (currentPhase === 'experiment' && (currentTrial === 20)) {
+                document.getElementById('experiment').classList.add('hidden');
+                document.getElementById('break').classList.remove('hidden');
+                startBreak('stroop');
+                return;
+            }
+
+            feedbackDiv.classList.add('hidden');
+            optionsDiv.classList.add('hidden');
+
+            let word = wordList[currentTrial];
+            let colorName = colors[Math.floor(Math.random() * colors.length)];
+            correctColor = colorName;
+
+            wordDiv.style.color = colorValues[colorName];
+            wordDiv.textContent = word;
+            wordDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                wordDiv.classList.add('hidden');
+                optionsDiv.classList.remove('hidden');
+            }, 650);
+        }
+
+        function selectColor(selectedColor) {
+            let feedbackDiv, optionsDiv;
+            if (currentPhase === 'practice') {
+                feedbackDiv = document.getElementById('practiceFeedback');
+                optionsDiv = document.getElementById('practiceOptions');
+            } else {
+                feedbackDiv = document.getElementById('experimentFeedback');
+                optionsDiv = document.getElementById('experimentOptions');
+            }
+
+            if (selectedColor === correctColor) {
+                feedbackDiv.textContent = '正确';
+            } else {
+                feedbackDiv.textContent = '错误';
+            }
+            feedbackDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                feedbackDiv.classList.add('hidden');
+                optionsDiv.classList.add('hidden');
+                currentTrial++;
+                showNextWord();
+            }, 500); // 显示反馈0.5秒后进入下一个试次
+        }
+
+// 开始休息
+function startBreak(nextPhase) {
+    let breakTime = 15; // 15秒
+    let progressBarFill = document.getElementById('progressBarFill');
+    let progressBarText = document.getElementById('progressBarText');
+    let breakContinueButton = document.getElementById('breakContinueButton');
+
+    progressBarFill.style.width = '0%';
+    progressBarText.textContent = breakTime + '秒';
+    breakContinueButton.classList.add('hidden');
+
+    let interval = setInterval(() => {
+        breakTime--;
+        let percent = ((15 - breakTime) / 15) * 100;
+        progressBarFill.style.width = percent + '%';
+        progressBarText.textContent = breakTime + '秒';
+
+        if (breakTime <= 0) {
+            clearInterval(interval);
+            // 显示“继续实验”按钮
+            breakContinueButton.classList.remove('hidden');
+            // 设置下一阶段
+            breakContinueButton.dataset.nextPhase = nextPhase;
+        }
+    }, 1000);
+}
+
+
+function continueExperiment() {
+    let nextPhase = document.getElementById('breakContinueButton').dataset.nextPhase;
+    document.getElementById('break').classList.add('hidden');
+    document.getElementById('breakContinueButton').classList.add('hidden');
+
+    if (nextPhase === 'stroop') {
+        document.getElementById('experiment').classList.remove('hidden');
+        document.getElementById('experimentTitle').innerText = '正式实验阶段（第二部分）';
+        showNextWord(); // 继续正式实验的下一个词汇
+    } else if (nextPhase === 'amp') {
+        document.getElementById('ampExperiment').classList.remove('hidden');
+        showNextAMPStimulus(); // 继续AMP的下一个刺激
+    }
+}
+
+
+        function finishStroopExperiment() {
+            document.getElementById('experiment').classList.add('hidden');
+            document.getElementById('stroopEnd').classList.remove('hidden');
+        }
+
+        // ========== AMP实验相关变量和函数 ==========
+        // 从Stroop任务中获取掩蔽刺激
+        const ampPrimeStimuli = {
+            "中性": neutralWords,
+            "焦虑": anxietyWords
+        };
+
+        // 目标刺激列表（中性图片文件名）
+        const ampTargetStimuli = [
+            "image1.jpg", "image2.jpg", "image3.jpg", "image4.jpg", "image5.jpg",
+            "image6.jpg", "image7.jpg", "image8.jpg", "image9.jpg", "image10.jpg",
+            "image11.jpg", "image12.jpg", "image13.jpg", "image14.jpg", "image15.jpg",
+            "image16.jpg", "image17.jpg", "image18.jpg", "image19.jpg", "image20.jpg"
+        ];
+
+        let ampTrials = [];
+        let ampCurrentTrial = 0;
+        let ampPhase = 'practice'; // 'practice' 或 'experiment'
+        let ampBreakTaken = false; // 标记是否已进行中间休息
+
+        function showAMPInstructions() {
+            document.getElementById('stroopEnd').classList.add('hidden');
+            document.getElementById('ampInstructions').classList.remove('hidden');
+        }
+
+        function startAMPPractice() {
+            document.getElementById('ampInstructions').classList.add('hidden');
+            document.getElementById('ampPractice').classList.remove('hidden');
+            // 生成练习试次
+            ampTrials = generateAMPTrials(7); // 7个练习试次
+            ampCurrentTrial = 0;
+            ampPhase = 'practice';
+            showNextAMPStimulus();
+        }
+
+        function restartAMPPractice() {
+            document.getElementById('ampPracticeEnd').classList.add('hidden');
+            document.getElementById('ampPractice').classList.remove('hidden');
+            ampTrials = generateAMPTrials(7); // 重新生成练习试次
+            ampCurrentTrial = 0;
+            showNextAMPStimulus();
+        }
+
+        function startAMPExperiment() {
+            document.getElementById('ampPractice').classList.add('hidden');
+            document.getElementById('ampPracticeEnd').classList.add('hidden');
+            document.getElementById('ampExperiment').classList.remove('hidden');
+            // 生成正式实验试次
+            ampTrials = generateAMPTrials(40); // 40个正式试次（每种掩蔽刺激类型20个）
+            shuffleArray(ampTrials);
+            ampCurrentTrial = 0;
+            ampPhase = 'experiment';
+            ampBreakTaken = false; // 重置标志变量
+            showNextAMPStimulus();
+        }
+
+        function generateAMPTrials(trialCount) {
+            let trials = [];
+            let primes = [];
+            for (let type in ampPrimeStimuli) {
+                primes = primes.concat(ampPrimeStimuli[type].map(word => ({ type: type, word: word })));
+            }
+            let targets = ampTargetStimuli.slice(0);
+
+            // 保证试次数量
+            while (trials.length < trialCount) {
+                let prime = primes[Math.floor(Math.random() * primes.length)];
+                let target = targets[Math.floor(Math.random() * targets.length)];
+                trials.push({ prime: prime, target: target });
+            }
+
+            return trials;
+        }
+
+        function showNextAMPStimulus() {
+            let primeDiv, targetDiv, optionsDiv;
+            if (ampPhase === 'practice') {
+                primeDiv = document.getElementById('ampPrimeStimulus');
+                targetDiv = document.getElementById('ampTargetStimulus');
+                optionsDiv = document.getElementById('ampPracticeOptions');
+            } else {
+                primeDiv = document.getElementById('ampPrimeStimulusExp');
+                targetDiv = document.getElementById('ampTargetStimulusExp');
+                optionsDiv = document.getElementById('ampExperimentOptions');
+            }
+
+            if (ampCurrentTrial >= ampTrials.length) {
+                if (ampPhase === 'practice') {
+                    document.getElementById('ampPractice').classList.add('hidden');
+                    document.getElementById('ampPracticeEnd').classList.remove('hidden');
+                } else {
+                    document.getElementById('ampExperiment').classList.add('hidden');
+                    document.getElementById('finish').classList.remove('hidden');
+                }
+                return;
+            }
+
+            // 检查是否需要休息
+            if (ampPhase === 'experiment' && ampCurrentTrial === ampTrials.length / 2 && !ampBreakTaken) {
+                ampBreakTaken = true; // 标记已进行休息
+                document.getElementById('ampExperiment').classList.add('hidden');
+                document.getElementById('break').classList.remove('hidden');
+                startBreak('amp');
+                return;
+            }
+
+            optionsDiv.classList.add('hidden');
+            primeDiv.textContent = ampTrials[ampCurrentTrial].prime.word;
+            primeDiv.classList.remove('hidden');
+
+            // 掩蔽刺激呈现100毫秒
+            setTimeout(() => {
+                primeDiv.classList.add('hidden');
+                // 空白间隔125毫秒
+                setTimeout(() => {
+                    targetDiv.src = 'images/' + ampTrials[ampCurrentTrial].target;
+                    targetDiv.classList.remove('hidden');
+                    // 目标刺激呈现225毫秒
+                    setTimeout(() => {
+                        targetDiv.classList.add('hidden');
+                        optionsDiv.classList.remove('hidden');
+                    }, 225);
+                }, 125);
+            }, 100);
+        }
+
+        function selectAMPOption(choice) {
+            let optionsDiv;
+            if (ampPhase === 'practice') {
+                optionsDiv = document.getElementById('ampPracticeOptions');
+            } else {
+                optionsDiv = document.getElementById('ampExperimentOptions');
+            }
+
+            // 在这里您可以记录参与者的选择，例如保存到数组或发送到服务器
+            // ampTrials[ampCurrentTrial].choice = choice;
+
+            optionsDiv.classList.add('hidden');
+            ampCurrentTrial++;
+            showNextAMPStimulus();
+        }
+
+        // 工具函数：打乱数组顺序
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+    </script>
+</body>
+</html>
