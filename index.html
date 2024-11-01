@@ -515,7 +515,12 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-
+    if (window.screen.orientation) {
+        window.screen.orientation.lock('landscape')
+        .then(() => console.log('Screen orientation locked to landscape mode'))
+        .catch((err) => console.error('Orientation lock failed:', err));
+    }
+        
     </script>
 </body>
 </html>
