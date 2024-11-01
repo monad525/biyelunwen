@@ -5,6 +5,8 @@
     <title>实验程序</title>
     <!-- 添加视口元标签 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- 在这里引用你的外部样式文件 -->
+    <link rel="stylesheet" href="style.css?v=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -87,21 +89,23 @@
                 font-size: 24px;
             }
         }
+        @media screen and (max-width: 1200px) {
+    .word {
+        font-size: 4vw; /* 在更大的屏幕上也调整字体大小 */
+    }
+}
+
     </style>
 </head>
 <body>
-    <!-- 这里可以继续添加你的页面内容 -->
-</body>
-</html>
-
 
     <!-- 开始页面 -->
     <div id="start">
         <h1>欢迎参加实验！</h1>
-        <p>请输入您父亲/母亲的后四位手机号码：</p>
-        <input type="text" id="phone" maxlength="4">
-        <br><br>
-        <button class="button" onclick="showInstructions()">开始实验</button>
+<p>请输入您父亲/母亲的后四位手机号码：</p>
+<input type="text" id="phone" maxlength="4" oninput="validatePhoneInput()">
+<br><br>
+<button class="button" id="startButton" onclick="showInstructions()" disabled>开始实验</button>
     </div>
 
     <!-- Stroop实验指导语 -->
@@ -217,8 +221,12 @@
         <p>感谢您的参与！</p>
     </div>
 
-    <!-- 将脚本放在这里，确保在HTML元素之后 -->
     <script>
+        let participantData = {
+    phone: "",
+    trials: []
+};
+
         // ========== Stroop实验相关变量和函数 ==========
 
     // 词汇列表
@@ -240,10 +248,41 @@
     // 分段控制
     let segment = 1; // 当前是第几段，总共2段
 
-    function showInstructions() {
-        document.getElementById('start').classList.add('hidden');
-        document.getElementById('instructions').classList.remove('hidden');
+function showInstructions() {
+    // 锁定屏幕方向为横屏
+    if (window.screen.orientation) {
+        window.screen.orientation.lock('landscape')
+        .then(() => console.log('Screen orientation locked to landscape mode'))
+        .catch((err) => {
+            console.error('Orientation lock failed:', err);
+            alert('无法锁定屏幕方向，请手动调整屏幕方向。');
+        });
     }
+
+    // 保存用户输入的手机号
+    const phone = document.getElementById('phone').value;
+    participantData.phone = phone;
+
+    // 隐藏开始页面，显示指导语页面
+    document.getElementById('start').classList.add('hidden');
+    document.getElementById('instructions').classList.remove('hidden');
+}
+
+
+function validatePhoneInput() {
+    const phoneInput = document.getElementById('phone');
+    const startButton = document.getElementById('startButton');
+
+    // 检查输入框中的值是否是四位数字
+    if (phoneInput.value.length === 4 && /^\d{4}$/.test(phoneInput.value)) {
+        startButton.disabled = false; // 启用按钮
+    } else {
+        startButton.disabled = true; // 禁用按钮
+    }
+}
+
+
+
 
     function startPractice() {
         document.getElementById('instructions').classList.add('hidden');
@@ -329,30 +368,40 @@
         }, 650);
     }
 
-    function selectColor(selectedColor) {
-        let feedbackDiv, optionsDiv;
-        if (currentPhase === 'practice') {
-            feedbackDiv = document.getElementById('practiceFeedback');
-            optionsDiv = document.getElementById('practiceOptions');
-        } else {
-            feedbackDiv = document.getElementById('experimentFeedback');
-            optionsDiv = document.getElementById('experimentOptions');
-        }
-
-        if (selectedColor === correctColor) {
-            feedbackDiv.textContent = '正确';
-        } else {
-            feedbackDiv.textContent = '错误';
-        }
-        feedbackDiv.classList.remove('hidden');
-
-        setTimeout(() => {
-            feedbackDiv.classList.add('hidden');
-            optionsDiv.classList.add('hidden');
-            currentTrial++;
-            showNextWord();
-        }, 500); // 显示反馈0.5秒后进入下一个试次
+function selectColor(selectedColor) {
+    let feedbackDiv, optionsDiv;
+    if (currentPhase === 'practice') {
+        feedbackDiv = document.getElementById('practiceFeedback');
+        optionsDiv = document.getElementById('practiceOptions');
+    } else {
+        feedbackDiv = document.getElementById('experimentFeedback');
+        optionsDiv = document.getElementById('experimentOptions');
     }
+
+    if (selectedColor === correctColor) {
+        feedbackDiv.textContent = '正确';
+    } else {
+        feedbackDiv.textContent = '错误';
+    }
+    feedbackDiv.classList.remove('hidden');
+
+    // 保存数据
+    participantData.trials.push({
+        trialNumber: currentTrial + 1,
+        word: wordList[currentTrial],
+        correctColor: correctColor,
+        selectedColor: selectedColor,
+        isCorrect: (selectedColor === correctColor)
+    });
+
+    setTimeout(() => {
+        feedbackDiv.classList.add('hidden');
+        optionsDiv.classList.add('hidden');
+        currentTrial++;
+        showNextWord();
+    }, 500); // 显示反馈0.5秒后进入下一个试次
+}
+
 
     let breakInterval; // 定义全局变量来保存休息倒计时的 interval
     let breakTime = 15; // 休息时间
@@ -408,10 +457,12 @@
         }
     }
 
-    function finishStroopExperiment() {
-        document.getElementById('experiment').classList.add('hidden');
-        document.getElementById('stroopEnd').classList.remove('hidden');
-    }
+function finishStroopExperiment() {
+    document.getElementById('experiment').classList.add('hidden');
+    document.getElementById('stroopEnd').classList.remove('hidden');
+    downloadCSV(); // 在实验结束时下载数据
+}
+
 
         // ========== AMP实验相关变量和函数 ==========
         // 从Stroop任务中获取掩蔽刺激
@@ -562,12 +613,25 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-    if (window.screen.orientation) {
-        window.screen.orientation.lock('landscape')
-        .then(() => console.log('Screen orientation locked to landscape mode'))
-        .catch((err) => console.error('Orientation lock failed:', err));
-    }
-        
+
+        function downloadCSV() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Phone,TrialNumber,Word,CorrectColor,SelectedColor,IsCorrect\n"; // 表头
+
+    participantData.trials.forEach(trial => {
+        csvContent += `${participantData.phone},${trial.trialNumber},${trial.word},${trial.correctColor},${trial.selectedColor},${trial.isCorrect}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "experiment_data.csv");
+    document.body.appendChild(link);
+    link.click();
+}
+
+
+
     </script>
 </body>
 </html>
