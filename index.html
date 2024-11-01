@@ -173,141 +173,140 @@
     <!-- 将脚本放在这里，确保在HTML元素之后 -->
     <script>
         // ========== Stroop实验相关变量和函数 ==========
-        // 词汇列表
-        const neutralWords = ["树", "水", "书", "桌子", "椅子", "笔", "天空", "电脑", "手机", "杯子", "门", "窗户", "石头", "路", "桥", "车", "灯", "云", "花", "草"];
-        const anxietyWords = ["考试", "作业", "成绩", "排名", "失败",
-                              "孤独", "被排斥", "比较", "羞辱", "争吵",
-                              "期望", "责备", "家庭矛盾", "失望", "要求",
-                              "自卑", "无助", "紧张", "担心", "害怕"];
-        const colors = ["红色", "绿色", "蓝色"];
-        const colorValues = {"红色": "red", "绿色": "green", "蓝色": "blue"};
 
-        // 记录当前阶段和试次
-        let practiceTrials = [];
-        let experimentTrials = [];
-        let currentTrial = 0;
-        let currentPhase = 'practice'; // 或 'experiment'
-        let correctColor = '';
+    // 词汇列表
+    const neutralWords = ["树", "水", "书", "桌子", "椅子", "笔", "天空", "电脑", "手机", "杯子", "门", "窗户", "石头", "路", "桥", "车", "灯", "云", "花", "草"];
+    const anxietyWords = ["考试", "作业", "成绩", "排名", "失败",
+                          "孤独", "被排斥", "比较", "羞辱", "争吵",
+                          "期望", "责备", "家庭矛盾", "失望", "要求",
+                          "自卑", "无助", "紧张", "担心", "害怕"];
+    const colors = ["红色", "绿色", "蓝色"];
+    const colorValues = {"红色": "red", "绿色": "green", "蓝色": "blue"};
 
-        // 分段控制
-        let segment = 1; // 当前是第几段，总共2段
+    // 记录当前阶段和试次
+    let practiceTrials = [];
+    let experimentTrials = [];
+    let currentTrial = 0;
+    let currentPhase = 'practice'; // 或 'experiment'
+    let correctColor = '';
 
-        function showInstructions() {
-            document.getElementById('start').classList.add('hidden');
-            document.getElementById('instructions').classList.remove('hidden');
+    // 分段控制
+    let segment = 1; // 当前是第几段，总共2段
+
+    function showInstructions() {
+        document.getElementById('start').classList.add('hidden');
+        document.getElementById('instructions').classList.remove('hidden');
+    }
+
+    function startPractice() {
+        document.getElementById('instructions').classList.add('hidden');
+        document.getElementById('practice').classList.remove('hidden');
+        // 初始化练习试次
+        practiceTrials = neutralWords.slice(0, 7);
+        shuffleArray(practiceTrials);
+        currentTrial = 0;
+        currentPhase = 'practice';
+        showNextWord();
+    }
+
+    function restartPractice() {
+        document.getElementById('practiceEnd').classList.add('hidden');
+        document.getElementById('practice').classList.remove('hidden');
+        shuffleArray(practiceTrials);
+        currentTrial = 0;
+        showNextWord();
+    }
+
+    function startExperiment() {
+        document.getElementById('practiceEnd').classList.add('hidden');
+        document.getElementById('experiment').classList.remove('hidden');
+        // 初始化正式实验试次
+        let neutralSample = neutralWords.slice(0);
+        let anxietySample = anxietyWords.slice(0);
+        shuffleArray(neutralSample);
+        shuffleArray(anxietySample);
+        experimentTrials = neutralSample.slice(0, 20).concat(anxietySample.slice(0, 20));
+        shuffleArray(experimentTrials);
+        currentTrial = 0;
+        currentPhase = 'experiment';
+        segment = 1;
+        showNextWord();
+    }
+
+    function showNextWord() {
+        let wordDiv, optionsDiv, feedbackDiv, wordList;
+        if (currentPhase === 'practice') {
+            wordDiv = document.getElementById('practiceWord');
+            optionsDiv = document.getElementById('practiceOptions');
+            feedbackDiv = document.getElementById('practiceFeedback');
+            wordList = practiceTrials;
+        } else {
+            wordDiv = document.getElementById('experimentWord');
+            optionsDiv = document.getElementById('experimentOptions');
+            feedbackDiv = document.getElementById('experimentFeedback');
+            wordList = experimentTrials;
         }
 
-        function startPractice() {
-            document.getElementById('instructions').classList.add('hidden');
-            document.getElementById('practice').classList.remove('hidden');
-            // 初始化练习试次
-            practiceTrials = neutralWords.slice(0, 7);
-            shuffleArray(practiceTrials);
-            currentTrial = 0;
-            currentPhase = 'practice';
-            showNextWord();
-        }
-
-        function restartPractice() {
-            document.getElementById('practiceEnd').classList.add('hidden');
-            document.getElementById('practice').classList.remove('hidden');
-            shuffleArray(practiceTrials);
-            currentTrial = 0;
-            showNextWord();
-        }
-
-        function startExperiment() {
-            document.getElementById('practiceEnd').classList.add('hidden');
-            document.getElementById('experiment').classList.remove('hidden');
-            // 初始化正式实验试次
-            let neutralSample = neutralWords.slice(0);
-            let anxietySample = anxietyWords.slice(0);
-            shuffleArray(neutralSample);
-            shuffleArray(anxietySample);
-            experimentTrials = neutralSample.slice(0, 20).concat(anxietySample.slice(0, 20));
-            shuffleArray(experimentTrials);
-            currentTrial = 0;
-            currentPhase = 'experiment';
-            segment = 1;
-            showNextWord();
-        }
-
-        function showNextWord() {
-            let wordDiv, optionsDiv, feedbackDiv, wordList;
+        if (currentTrial >= wordList.length) {
             if (currentPhase === 'practice') {
-                wordDiv = document.getElementById('practiceWord');
-                optionsDiv = document.getElementById('practiceOptions');
-                feedbackDiv = document.getElementById('practiceFeedback');
-                wordList = practiceTrials;
+                document.getElementById('practice').classList.add('hidden');
+                document.getElementById('practiceEnd').classList.remove('hidden');
             } else {
-                wordDiv = document.getElementById('experimentWord');
-                optionsDiv = document.getElementById('experimentOptions');
-                feedbackDiv = document.getElementById('experimentFeedback');
-                wordList = experimentTrials;
+                finishStroopExperiment();
             }
+            return;
+        }
 
-            if (currentTrial >= wordList.length) {
-                if (currentPhase === 'practice') {
-                    document.getElementById('practice').classList.add('hidden');
-                    document.getElementById('practiceEnd').classList.remove('hidden');
-                } else {
-                    finishStroopExperiment();
-                }
-                return;
-            }
+        // 检查是否需要休息
+        if (currentPhase === 'experiment' && (currentTrial === 20)) {
+            document.getElementById('experiment').classList.add('hidden');
+            document.getElementById('break').classList.remove('hidden');
+            startBreak('stroop');
+            return;
+        }
 
-            // 检查是否需要休息
-            if (currentPhase === 'experiment' && (currentTrial === 20)) {
-                document.getElementById('experiment').classList.add('hidden');
-                document.getElementById('break').classList.remove('hidden');
-                startBreak('stroop');
-                return;
-            }
+        feedbackDiv.classList.add('hidden');
+        optionsDiv.classList.add('hidden');
 
+        let word = wordList[currentTrial];
+        let colorName = colors[Math.floor(Math.random() * colors.length)];
+        correctColor = colorName;
+
+        wordDiv.style.color = colorValues[colorName];
+        wordDiv.textContent = word;
+        wordDiv.classList.remove('hidden');
+
+        setTimeout(() => {
+            wordDiv.classList.add('hidden');
+            optionsDiv.classList.remove('hidden');
+        }, 650);
+    }
+
+    function selectColor(selectedColor) {
+        let feedbackDiv, optionsDiv;
+        if (currentPhase === 'practice') {
+            feedbackDiv = document.getElementById('practiceFeedback');
+            optionsDiv = document.getElementById('practiceOptions');
+        } else {
+            feedbackDiv = document.getElementById('experimentFeedback');
+            optionsDiv = document.getElementById('experimentOptions');
+        }
+
+        if (selectedColor === correctColor) {
+            feedbackDiv.textContent = '正确';
+        } else {
+            feedbackDiv.textContent = '错误';
+        }
+        feedbackDiv.classList.remove('hidden');
+
+        setTimeout(() => {
             feedbackDiv.classList.add('hidden');
             optionsDiv.classList.add('hidden');
+            currentTrial++;
+            showNextWord();
+        }, 500); // 显示反馈0.5秒后进入下一个试次
+    }
 
-            let word = wordList[currentTrial];
-            let colorName = colors[Math.floor(Math.random() * colors.length)];
-            correctColor = colorName;
-
-            wordDiv.style.color = colorValues[colorName];
-            wordDiv.textContent = word;
-            wordDiv.classList.remove('hidden');
-
-            setTimeout(() => {
-                wordDiv.classList.add('hidden');
-                optionsDiv.classList.remove('hidden');
-            }, 650);
-        }
-
-        function selectColor(selectedColor) {
-            let feedbackDiv, optionsDiv;
-            if (currentPhase === 'practice') {
-                feedbackDiv = document.getElementById('practiceFeedback');
-                optionsDiv = document.getElementById('practiceOptions');
-            } else {
-                feedbackDiv = document.getElementById('experimentFeedback');
-                optionsDiv = document.getElementById('experimentOptions');
-            }
-
-            if (selectedColor === correctColor) {
-                feedbackDiv.textContent = '正确';
-            } else {
-                feedbackDiv.textContent = '错误';
-            }
-            feedbackDiv.classList.remove('hidden');
-
-            setTimeout(() => {
-                feedbackDiv.classList.add('hidden');
-                optionsDiv.classList.add('hidden');
-                currentTrial++;
-                showNextWord();
-            }, 500); // 显示反馈0.5秒后进入下一个试次
-        }
-
-// 开始休息
-function startBreak(nextPhase) {
     let breakInterval; // 定义全局变量来保存休息倒计时的 interval
     let breakTime = 15; // 休息时间
 
@@ -362,12 +361,10 @@ function startBreak(nextPhase) {
         }
     }
 
-
-
-        function finishStroopExperiment() {
-            document.getElementById('experiment').classList.add('hidden');
-            document.getElementById('stroopEnd').classList.remove('hidden');
-        }
+    function finishStroopExperiment() {
+        document.getElementById('experiment').classList.add('hidden');
+        document.getElementById('stroopEnd').classList.remove('hidden');
+    }
 
         // ========== AMP实验相关变量和函数 ==========
         // 从Stroop任务中获取掩蔽刺激
