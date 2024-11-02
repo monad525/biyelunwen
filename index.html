@@ -6,7 +6,6 @@
     <!-- 添加视口元标签 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- 在这里引用你的外部样式文件 -->
-    <link rel="stylesheet" href="style.css?v=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -250,12 +249,13 @@
 
 function showInstructions() {
     // 锁定屏幕方向为横屏
-    if (window.screen.orientation) {
-        window.screen.orientation.lock('landscape')
-        .then(() => console.log('Screen orientation locked to landscape mode'))
-        .catch((err) => {
+if (window.screen.orientation) {
+    window.screen.orientation.lock('landscape')
+    .then(() => console.log('Screen orientation locked to landscape mode'))
+    .catch((err) => console.warn('Orientation lock is not supported on this device'));
+}
             console.error('Orientation lock failed:', err);
-            alert('无法锁定屏幕方向，请手动调整屏幕方向。');
+            alert('尽量横屏获得最佳实验体验。');
         });
     }
 
@@ -381,6 +381,7 @@ function showNextWord() {
 let isSelectingColor = false; // 增加全局变量
 
 function selectColor(selectedColor) {
+    console.log("选择了颜色:", selectedColor); // 添加调试信息
     if (isSelectingColor) return; // 防止重复点击
     isSelectingColor = true;
 
