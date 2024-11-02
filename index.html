@@ -280,17 +280,24 @@ if (window.screen.orientation) {
     document.getElementById('start').classList.add('hidden');
     document.getElementById('instructions').classList.remove('hidden');
 }
-    function startPractice() {
-        document.getElementById('instructions').classList.add('hidden');
-        document.getElementById('practice').classList.remove('hidden');
-        // 初始化练习试次
-        practiceTrials = neutralWords.slice(0, 7);
-        shuffleArray(practiceTrials);
-        currentTrial = 0;
-        currentPhase = 'practice';
-        showNextWord();
-    }
-
+function startPractice() {
+    document.getElementById('instructions').classList.add('hidden');
+    document.getElementById('practice').classList.remove('hidden');
+    
+    // 初始化练习试次
+    practiceTrials = neutralWords.slice(0, 7);
+    shuffleArray(practiceTrials);
+    currentTrial = 0;
+    currentPhase = 'practice';
+    isWordVisible = false; // 重置词显示状态
+    isSelectingColor = false; // 重置选择状态
+    
+    // 确保所有反馈和选项都是隐藏的
+    document.getElementById('practiceFeedback').classList.add('hidden');
+    document.getElementById('practiceOptions').classList.add('hidden');
+    
+    showNextWord();
+}
     function restartPractice() {
         document.getElementById('practiceEnd').classList.add('hidden');
         document.getElementById('practice').classList.remove('hidden');
@@ -351,9 +358,11 @@ function showNextWord() {
         } else {
             finishStroopExperiment();
         }
+        isWordVisible = false; // 重要：结束时要重置状态
         return;
     }
 
+    // 先隐藏反馈和选项
     feedbackDiv.classList.add('hidden');
     optionsDiv.classList.add('hidden');
 
@@ -376,22 +385,23 @@ function showNextWord() {
     }, 650);
 }
 
-
-let isSelectingColor = false; // 增加全局变量
-
+// 修改 selectColor 函数
 function selectColor(selectedColor) {
-    console.log("选择了颜色:", selectedColor); // 添加调试信息
     if (isSelectingColor) return; // 防止重复点击
     isSelectingColor = true;
 
-    let feedbackDiv, optionsDiv;
+    let feedbackDiv, optionsDiv, wordList;
     if (currentPhase === 'practice') {
         feedbackDiv = document.getElementById('practiceFeedback');
         optionsDiv = document.getElementById('practiceOptions');
+        wordList = practiceTrials;
     } else {
         feedbackDiv = document.getElementById('experimentFeedback');
         optionsDiv = document.getElementById('experimentOptions');
+        wordList = experimentTrials;
     }
+
+    console.log("选择了颜色:", selectedColor, "正确颜色:", correctColor); // 调试日志
 
     if (selectedColor === correctColor) {
         feedbackDiv.textContent = '正确';
@@ -400,6 +410,7 @@ function selectColor(selectedColor) {
     }
     feedbackDiv.classList.remove('hidden');
 
+    // 记录数据
     participantData.trials.push({
         trialNumber: currentTrial + 1,
         word: wordList[currentTrial],
@@ -408,13 +419,14 @@ function selectColor(selectedColor) {
         isCorrect: (selectedColor === correctColor)
     });
 
+    // 显示反馈后延迟进入下一试次
     setTimeout(() => {
         feedbackDiv.classList.add('hidden');
         optionsDiv.classList.add('hidden');
         currentTrial++;
-        showNextWord();
-        isSelectingColor = false; // 重置状态
-    }, 500); // 显示反馈0.5秒后进入下一个试次
+        isSelectingColor = false; // 重置选择状态
+        showNextWord(); // 显示下一个词
+    }, 500);
 }
 
 
