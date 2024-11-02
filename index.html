@@ -485,13 +485,25 @@ function continueExperiment() {
     }
     
     isBreakActive = false;
+    isWordVisible = false; // 重要：重置词显示状态
+    isSelectingColor = false; // 重要：重置选择状态
+    
     document.getElementById('break').classList.add('hidden');
     document.getElementById('breakContinueButton').classList.add('hidden');
 
     if (nextPhase === 'stroop') {
+        // 重置所有相关元素的状态
+        const experimentWord = document.getElementById('experimentWord');
+        const experimentOptions = document.getElementById('experimentOptions');
+        const experimentFeedback = document.getElementById('experimentFeedback');
+        
+        experimentWord.classList.add('hidden');
+        experimentOptions.classList.add('hidden');
+        experimentFeedback.classList.add('hidden');
+        
         document.getElementById('experiment').classList.remove('hidden');
         document.getElementById('experimentTitle').innerText = '正式实验阶段（第二部分）';
-        showNextWord();
+        showNextWord(); // 显示下一个词
     } else if (nextPhase === 'amp') {
         document.getElementById('ampExperiment').classList.remove('hidden');
         showNextAMPStimulus();
@@ -587,96 +599,119 @@ function clearAMPTimers() {
     currentAMPTimers = [];
 }
 
-function showNextAMPStimulus() {
-    clearAMPTimers(); // 清理之前的定时器
+function showNextWord() {
+    if (isWordVisible) {
+        console.log("词汇正在显示中，等待...");
+        return;
+    }
+    isWordVisible = true;
 
-    let primeDiv, targetDiv, optionsDiv;
-    if (ampPhase === 'practice') {
-        primeDiv = document.getElementById('ampPrimeStimulus');
-        targetDiv = document.getElementById('ampTargetStimulus');
-        optionsDiv = document.getElementById('ampPracticeOptions');
+    let wordDiv, optionsDiv, feedbackDiv, wordList;
+    if (currentPhase === 'practice') {
+        wordDiv = document.getElementById('practiceWord');
+        optionsDiv = document.getElementById('practiceOptions');
+        feedbackDiv = document.getElementById('practiceFeedback');
+        wordList = practiceTrials;
     } else {
-        primeDiv = document.getElementById('ampPrimeStimulusExp');
-        targetDiv = document.getElementById('ampTargetStimulusExp');
-        optionsDiv = document.getElementById('ampExperimentOptions');
+        wordDiv = document.getElementById('experimentWord');
+        optionsDiv = document.getElementById('experimentOptions');
+        feedbackDiv = document.getElementById('experimentFeedback');
+        wordList = experimentTrials;
     }
 
-    if (ampCurrentTrial >= ampTrials.length) {
-        if (ampPhase === 'practice') {
-            document.getElementById('ampPractice').classList.add('hidden');
-            document.getElementById('ampPracticeEnd').classList.remove('hidden');
-        } else {
-            document.getElementById('ampExperiment').classList.add('hidden');
-            document.getElementById('finish').classList.remove('hidden');
-        }
-        return;
-    }
+    console.log("当前试次:", currentTrial, "词列表长度:", wordList.length);
 
-    // 检查是否需要休息
-    if (ampPhase === 'experiment' && ampCurrentTrial === Math.floor(ampTrials.length / 2) && !ampBreakTaken) {
-        ampBreakTaken = true;
-        document.getElementById('ampExperiment').classList.add('hidden');
+    // 检查是否需要休息（正式实验第20个试次）
+    if (currentPhase === 'experiment' && currentTrial === 20) {
+        isWordVisible = false;
+        document.getElementById('experiment').classList.add('hidden');
         document.getElementById('break').classList.remove('hidden');
-        startBreak('amp');
+        startBreak('stroop');
         return;
     }
 
-    // 重置显示状态
+    // 检查是否结束
+    if (currentTrial >= wordList.length) {
+        console.warn("当前试次超出词汇列表长度，实验结束");
+        if (currentPhase === 'practice') {
+            document.getElementById('practice').classList.add('hidden');
+            document.getElementById('practiceEnd').classList.remove('hidden');
+        } else {
+            finishStroopExperiment();
+        }
+        isWordVisible = false;
+        return;
+    }
+
+    // 确保选项和反馈是隐藏的
     optionsDiv.classList.add('hidden');
-    primeDiv.classList.add('hidden');
-    targetDiv.classList.add('hidden');
+    feedbackDiv.classList.add('hidden');
 
-    // 预加载目标图片
-    const img = new Image();
-    img.onload = () => {
-        // 开始刺激序列
-        primeDiv.textContent = ampTrials[ampCurrentTrial].prime.word;
-        primeDiv.classList.remove('hidden');
+    // 准备显示新词
+    let word = wordList[currentTrial];
+    let colorName = colors[Math.floor(Math.random() * colors.length)];
+    correctColor = colorName;
 
-        // 掩蔽刺激呈现100毫秒
-        currentAMPTimers.push(setTimeout(() => {
-            primeDiv.classList.add('hidden');
+    // 显示词汇
+    console.log("显示词汇:", word, "颜色:", colorName);
+    wordDiv.style.color = colorValues[colorName];
+    wordDiv.textContent = word;
+    
+    // 使用 setTimeout 创建序列
+    setTimeout(() => {
+        wordDiv.classList.remove('hidden'); // 显示词汇
+        
+        setTimeout(() => {
+            wordDiv.classList.add('hidden'); // 隐藏词汇
             
-            // 空白间隔125毫秒
-            currentAMPTimers.push(setTimeout(() => {
-                targetDiv.src = img.src;
-                targetDiv.classList.remove('hidden');
-                
-                // 目标刺激呈现225毫秒
-                currentAMPTimers.push(setTimeout(() => {
-                    targetDiv.classList.add('hidden');
-                    optionsDiv.classList.remove('hidden');
-                }, 225));
-            }, 125));
-        }, 100));
-    };
-
-    img.onerror = () => {
-        console.error('图片加载失败:', ampTrials[ampCurrentTrial].target);
-        // 跳过当前试次，继续下一个
-        ampCurrentTrial++;
-        showNextAMPStimulus();
-    };
-
-    img.src = 'images/' + ampTrials[ampCurrentTrial].target;
+            setTimeout(() => {
+                optionsDiv.classList.remove('hidden'); // 显示选项
+                isWordVisible = false; // 重置状态
+            }, 50); // 短暂延迟后显示选项
+            
+        }, 650); // 显示词汇650ms
+        
+    }, 200); // 开始前短暂延迟
 }
 
-function selectAMPOption(choice) {
-    clearAMPTimers(); // 清理所有定时器
+// 修改 selectColor 函数中的计时器部分
+function selectColor(selectedColor) {
+    if (isSelectingColor) return;
+    isSelectingColor = true;
 
-    let optionsDiv = ampPhase === 'practice' 
-        ? document.getElementById('ampPracticeOptions')
-        : document.getElementById('ampExperimentOptions');
+    let feedbackDiv, optionsDiv, wordList;
+    if (currentPhase === 'practice') {
+        feedbackDiv = document.getElementById('practiceFeedback');
+        optionsDiv = document.getElementById('practiceOptions');
+        wordList = practiceTrials;
+    } else {
+        feedbackDiv = document.getElementById('experimentFeedback');
+        optionsDiv = document.getElementById('experimentOptions');
+        wordList = experimentTrials;
+    }
 
-    // 记录反应
-    ampTrials[ampCurrentTrial].response = {
-        choice: choice,
-        timestamp: Date.now()
-    };
+    if (selectedColor === correctColor) {
+        feedbackDiv.textContent = '正确';
+    } else {
+        feedbackDiv.textContent = '错误';
+    }
+    feedbackDiv.classList.remove('hidden');
 
-    optionsDiv.classList.add('hidden');
-    ampCurrentTrial++;
-    showNextAMPStimulus();
+    participantData.trials.push({
+        trialNumber: currentTrial + 1,
+        word: wordList[currentTrial],
+        correctColor: correctColor,
+        selectedColor: selectedColor,
+        isCorrect: (selectedColor === correctColor)
+    });
+
+    setTimeout(() => {
+        feedbackDiv.classList.add('hidden');
+        optionsDiv.classList.add('hidden');
+        currentTrial++;
+        isSelectingColor = false;
+        showNextWord();
+    }, 500);
 }
 
         // 工具函数：打乱数组顺序
