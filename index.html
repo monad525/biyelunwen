@@ -323,7 +323,6 @@ function validatePhoneInput() {
 let wordList = [];
 
 function showNextWord() {
-    console.log("进入 showNextWord，当前试次:", currentTrial); // 调试日志
     let wordDiv, optionsDiv, feedbackDiv;
     if (currentPhase === 'practice') {
         wordDiv = document.getElementById('practiceWord');
@@ -338,7 +337,6 @@ function showNextWord() {
     }
 
     if (currentTrial >= wordList.length) {
-        console.log("试次已完成，跳转至下一阶段"); // 调试日志
         if (currentPhase === 'practice') {
             document.getElementById('practice').classList.add('hidden');
             document.getElementById('practiceEnd').classList.remove('hidden');
@@ -348,9 +346,11 @@ function showNextWord() {
         return;
     }
 
+    // 隐藏反馈和选项
     feedbackDiv.classList.add('hidden');
     optionsDiv.classList.add('hidden');
 
+    // 显示词汇
     let word = wordList[currentTrial];
     let colorName = colors[Math.floor(Math.random() * colors.length)];
     correctColor = colorName;
@@ -359,14 +359,13 @@ function showNextWord() {
     wordDiv.textContent = word;
     wordDiv.classList.remove('hidden');
 
-    console.log("显示单词:", word, "颜色:", colorName); // 调试日志
-
+    // 设置定时器，在650毫秒后隐藏词汇并显示选项
     setTimeout(() => {
-        wordDiv.classList.add('hidden');
-        optionsDiv.classList.remove('hidden');
-        console.log("单词隐藏，显示颜色选项"); // 调试日志
+        wordDiv.classList.add('hidden'); // 隐藏词汇
+        optionsDiv.classList.remove('hidden'); // 显示选项
     }, 650);
 }
+
 
 function selectColor(selectedColor) {
     console.log("选择颜色:", selectedColor, "正确颜色:", correctColor); // 调试日志
