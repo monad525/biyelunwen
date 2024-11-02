@@ -319,10 +319,12 @@ function validatePhoneInput() {
         showNextWord();
     }
 
-// 定义全局变量 wordList
-let wordList = [];
+let isWordVisible = false; // 全局声明
 
 function showNextWord() {
+    if (isWordVisible) return; // 如果词汇正在显示，不继续执行
+    isWordVisible = true; // 标记为正在显示词汇
+
     let wordDiv, optionsDiv, feedbackDiv;
     if (currentPhase === 'practice') {
         wordDiv = document.getElementById('practiceWord');
@@ -367,16 +369,20 @@ function showNextWord() {
 
     // 在650毫秒后隐藏词汇并显示选项
     setTimeout(() => {
-            console.log("Hiding word and showing options"); // 调试日志
         wordDiv.classList.add('hidden'); // 隐藏词汇
+        console.log("词汇已隐藏"); // 调试日志
         optionsDiv.classList.remove('hidden'); // 显示选项
+        console.log("选项已显示"); // 调试日志
+        isWordVisible = false; // 重置标记，允许下一次调用
     }, 650);
 }
 
 
+let isSelectingColor = false; // 增加全局变量
 
 function selectColor(selectedColor) {
-    console.log("选择颜色:", selectedColor, "正确颜色:", correctColor); // 调试日志
+    if (isSelectingColor) return; // 防止重复点击
+    isSelectingColor = true;
 
     let feedbackDiv, optionsDiv;
     if (currentPhase === 'practice') {
@@ -394,25 +400,23 @@ function selectColor(selectedColor) {
     }
     feedbackDiv.classList.remove('hidden');
 
-    // 保存数据
     participantData.trials.push({
         trialNumber: currentTrial + 1,
-        word: wordList[currentTrial], // 现在 wordList 是全局变量，引用不会出错
+        word: wordList[currentTrial],
         correctColor: correctColor,
         selectedColor: selectedColor,
         isCorrect: (selectedColor === correctColor)
     });
-
-    console.log("保存数据:", participantData.trials[currentTrial]); // 调试日志
 
     setTimeout(() => {
         feedbackDiv.classList.add('hidden');
         optionsDiv.classList.add('hidden');
         currentTrial++;
         showNextWord();
-        console.log("进入下一试次, 当前试次:", currentTrial); // 调试日志
+        isSelectingColor = false; // 重置状态
     }, 500); // 显示反馈0.5秒后进入下一个试次
 }
+
 
 
 
