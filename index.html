@@ -220,6 +220,8 @@
         <p>感谢您的参与！</p>
     </div>
 
+
+    
     <script>
         let participantData = {
     phone: "",
@@ -247,14 +249,25 @@
     // 分段控制
     let segment = 1; // 当前是第几段，总共2段
 
+        function validatePhoneInput() {
+    const phoneInput = document.getElementById('phone');
+    const startButton = document.getElementById('startButton');
+
+    // 检查输入框中的值是否是四位数字
+    if (phoneInput.value.length === 4 && /^\d{4}$/.test(phoneInput.value)) {
+        startButton.disabled = false; // 启用按钮
+    } else {
+        startButton.disabled = true; // 禁用按钮
+    }
+}
+        
 function showInstructions() {
     // 锁定屏幕方向为横屏
 if (window.screen.orientation) {
     window.screen.orientation.lock('landscape')
     .then(() => console.log('Screen orientation locked to landscape mode'))
-    .catch((err) => console.warn('Orientation lock is not supported on this device'));
-}
-            console.error('Orientation lock failed:', err);
+        .catch((err) => {
+            console.warn('Orientation lock is not supported on this device');
             alert('尽量横屏获得最佳实验体验。');
         });
     }
@@ -267,23 +280,6 @@ if (window.screen.orientation) {
     document.getElementById('start').classList.add('hidden');
     document.getElementById('instructions').classList.remove('hidden');
 }
-
-
-function validatePhoneInput() {
-    const phoneInput = document.getElementById('phone');
-    const startButton = document.getElementById('startButton');
-
-    // 检查输入框中的值是否是四位数字
-    if (phoneInput.value.length === 4 && /^\d{4}$/.test(phoneInput.value)) {
-        startButton.disabled = false; // 启用按钮
-    } else {
-        startButton.disabled = true; // 禁用按钮
-    }
-}
-
-
-
-
     function startPractice() {
         document.getElementById('instructions').classList.add('hidden');
         document.getElementById('practice').classList.remove('hidden');
