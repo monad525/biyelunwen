@@ -319,56 +319,58 @@ function validatePhoneInput() {
         showNextWord();
     }
 
-    function showNextWord() {
-        let wordDiv, optionsDiv, feedbackDiv, wordList;
-        if (currentPhase === 'practice') {
-            wordDiv = document.getElementById('practiceWord');
-            optionsDiv = document.getElementById('practiceOptions');
-            feedbackDiv = document.getElementById('practiceFeedback');
-            wordList = practiceTrials;
-        } else {
-            wordDiv = document.getElementById('experimentWord');
-            optionsDiv = document.getElementById('experimentOptions');
-            feedbackDiv = document.getElementById('experimentFeedback');
-            wordList = experimentTrials;
-        }
+// 定义全局变量 wordList
+let wordList = [];
 
-        if (currentTrial >= wordList.length) {
-            if (currentPhase === 'practice') {
-                document.getElementById('practice').classList.add('hidden');
-                document.getElementById('practiceEnd').classList.remove('hidden');
-            } else {
-                finishStroopExperiment();
-            }
-            return;
-        }
-
-        // 检查是否需要休息
-        if (currentPhase === 'experiment' && (currentTrial === 20)) {
-            document.getElementById('experiment').classList.add('hidden');
-            document.getElementById('break').classList.remove('hidden');
-            startBreak('stroop');
-            return;
-        }
-
-        feedbackDiv.classList.add('hidden');
-        optionsDiv.classList.add('hidden');
-
-        let word = wordList[currentTrial];
-        let colorName = colors[Math.floor(Math.random() * colors.length)];
-        correctColor = colorName;
-
-        wordDiv.style.color = colorValues[colorName];
-        wordDiv.textContent = word;
-        wordDiv.classList.remove('hidden');
-
-        setTimeout(() => {
-            wordDiv.classList.add('hidden');
-            optionsDiv.classList.remove('hidden');
-        }, 650);
+function showNextWord() {
+    console.log("进入 showNextWord，当前试次:", currentTrial); // 调试日志
+    let wordDiv, optionsDiv, feedbackDiv;
+    if (currentPhase === 'practice') {
+        wordDiv = document.getElementById('practiceWord');
+        optionsDiv = document.getElementById('practiceOptions');
+        feedbackDiv = document.getElementById('practiceFeedback');
+        wordList = practiceTrials; // 更新全局 wordList 变量
+    } else {
+        wordDiv = document.getElementById('experimentWord');
+        optionsDiv = document.getElementById('experimentOptions');
+        feedbackDiv = document.getElementById('experimentFeedback');
+        wordList = experimentTrials; // 更新全局 wordList 变量
     }
 
+    if (currentTrial >= wordList.length) {
+        console.log("试次已完成，跳转至下一阶段"); // 调试日志
+        if (currentPhase === 'practice') {
+            document.getElementById('practice').classList.add('hidden');
+            document.getElementById('practiceEnd').classList.remove('hidden');
+        } else {
+            finishStroopExperiment();
+        }
+        return;
+    }
+
+    feedbackDiv.classList.add('hidden');
+    optionsDiv.classList.add('hidden');
+
+    let word = wordList[currentTrial];
+    let colorName = colors[Math.floor(Math.random() * colors.length)];
+    correctColor = colorName;
+
+    wordDiv.style.color = colorValues[colorName];
+    wordDiv.textContent = word;
+    wordDiv.classList.remove('hidden');
+
+    console.log("显示单词:", word, "颜色:", colorName); // 调试日志
+
+    setTimeout(() => {
+        wordDiv.classList.add('hidden');
+        optionsDiv.classList.remove('hidden');
+        console.log("单词隐藏，显示颜色选项"); // 调试日志
+    }, 650);
+}
+
 function selectColor(selectedColor) {
+    console.log("选择颜色:", selectedColor, "正确颜色:", correctColor); // 调试日志
+
     let feedbackDiv, optionsDiv;
     if (currentPhase === 'practice') {
         feedbackDiv = document.getElementById('practiceFeedback');
@@ -388,19 +390,24 @@ function selectColor(selectedColor) {
     // 保存数据
     participantData.trials.push({
         trialNumber: currentTrial + 1,
-        word: wordList[currentTrial],
+        word: wordList[currentTrial], // 现在 wordList 是全局变量，引用不会出错
         correctColor: correctColor,
         selectedColor: selectedColor,
         isCorrect: (selectedColor === correctColor)
     });
+
+    console.log("保存数据:", participantData.trials[currentTrial]); // 调试日志
 
     setTimeout(() => {
         feedbackDiv.classList.add('hidden');
         optionsDiv.classList.add('hidden');
         currentTrial++;
         showNextWord();
+        console.log("进入下一试次, 当前试次:", currentTrial); // 调试日志
     }, 500); // 显示反馈0.5秒后进入下一个试次
 }
+
+
 
 
     let breakInterval; // 定义全局变量来保存休息倒计时的 interval
